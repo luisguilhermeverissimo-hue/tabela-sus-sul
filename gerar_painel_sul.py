@@ -84,7 +84,10 @@ def mov_curto(m):
 
 
 def autor(p, nome):
-    return chave(p["polo_ativo"]).startswith("MUNICIPIODE" + chave(nome))
+    # nome exato (evita "São João" casar com "São João do Ivaí"); aceita "Município de X e outros (n)"
+    alvo = "MUNICIPIODE" + chave(nome)
+    ativo = chave(re.sub(r"\s+e outros\s*\(\d+\)\s*$", "", p["polo_ativo"], flags=re.I))
+    return ativo == alvo
 
 
 def lista_terceiros(ps):
@@ -102,6 +105,10 @@ def classificar(reg, nome):
     obs = []
     if proprios:
         sit = "com"
+        for p in proprios:
+            if "e outros" in p["polo_ativo"]:
+                obs.append(f"No processo {p['processo']}, o polo ativo é \"{p['polo_ativo']}\" e o passivo, "
+                           f"\"{p['polo_passivo']}\"; o município conta como autor, mas convém conferir os demais autores.")
     elif duvida:
         sit = "verificar"
         obs.append("Polo ativo com outras partes; conferir nos autos se o município é coautor ou réu: " +
